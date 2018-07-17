@@ -1,0 +1,42 @@
+{
+  "name": "gentx",
+  "version": "1.0.2",
+  "description": "> 优雅的数据管理工具",
+  "main": "dist/gent-data.common.js",
+  "devDependencies": {
+    "babel-jest": "^22.0.4",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-latest": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
+    "babelrc-rollup": "^3.0.0",
+    "jest": "^23.1.0",
+    "rollup": "^0.60.7",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-istanbul": "^1.1.0",
+    "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-typescript": "^0.8.1",
+    "rollup-plugin-uglify": "^2.0.1",
+    "rollup-watch": "^4.3.1",
+    "rxjs": "^6.x"
+  },
+  "peerDependencies": {
+    "rxjs": "^6.x"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c rollup.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gent-data/gent-hub.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gent-data/gent-hub/issues"
+  },
+  "homepage": "https://github.com/gent-data/gent-hub#readme",
+  "dependencies": {}
+}
