@@ -1,8 +1,8 @@
 {
   "name": "gentx",
   "version": "1.0.2",
-  "description": "> 优雅的数据管理工具",
-  "main": "dist/gent-data.common.js",
+  "description": "> RxJS 辅助工具",
+  "main": "dist/gentx.common.js",
   "devDependencies": {
     "babel-jest": "^22.0.4",
     "babel-plugin-external-helpers": "^6.22.0",
@@ -30,13 +30,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gent-data/gent-hub.git"
+    "url": "git+https://github.com/ccqgithub/gentx.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gent-data/gent-hub/issues"
+    "url": "https://github.com/ccqgithub/gentx/issues"
   },
-  "homepage": "https://github.com/gent-data/gent-hub#readme",
+  "homepage": "https://github.com/ccqgithub/gentx#readme",
   "dependencies": {}
 }

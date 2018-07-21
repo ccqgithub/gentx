@@ -37,7 +37,7 @@ let config = {
   plugins: plugins,
   external: external,
   output: {
-    file: 'dist/gent-data.common.js',
+    file: 'dist/gentx.common.js',
     format: 'cjs',
     sourcemap: true
   }

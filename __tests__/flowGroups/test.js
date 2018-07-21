@@ -1,14 +1,9 @@
-import { FlowGroup } from '../../index';
+import { flowGroupSources } from '../../index';
 import { logMiddleware } from '../flows/middleware';
-import { testFlow } from '../flows/test';
 import * as TestSoureces from '../sources/test';
 
-const testFlows = new FlowGroup({
-  name: 'group'
+export const testFlows = flowGroupSources(TestSoureces, {
+  beforeMiddlewares: [logMiddleware],
+  afterMiddlewares: [logMiddleware],
+  groupName: 'test'
 });
-
-testFlows.addFlow(testFlow, 'test');
-
-testFlows.addSources(TestSoureces, 'source');
-
-export { testFlows };

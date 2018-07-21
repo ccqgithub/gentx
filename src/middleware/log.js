@@ -2,7 +2,7 @@ import { map } from 'rxjs/operators';
 import { log } from '../utils';
 
 export function logMiddleware(input, opts={}) {
-  let {groupName, flowName, middleware} = opts;
+  let {flow, flowGroup, middleware} = opts;
   let typeMsg = { before: 'in', after: 'out' }[middleware];
 
   // not use as a middleware
@@ -18,7 +18,7 @@ export function logMiddleware(input, opts={}) {
         logData = e.message;
       }
 
-      log(`gent-data log ~ flow ${typeMsg} <${groupName}>.<${flowName}>:`, logData);
+      log(`[gentx log] ~ flow ${typeMsg} <${flowGroup}>.<${flow}>:`, logData);
 
       return value;
     })

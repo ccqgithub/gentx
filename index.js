@@ -1,23 +1,18 @@
-import { catchError } from './src/utils';
-import { logMiddleware } from './src/middleware/log';
-import { FlowGroup } from './src/FlowGroup';
-import { 
-  observePromise, 
-  observeValue, 
-  sourceToObservable,
-  concatMapSource,
-  mergeMapSource,
-  switchMapSource
+export {
+  catchError
+} from './src/utils';
+
+export { 
+  logMiddleware 
+} from './src/middleware/log';
+
+export {
+  makeObservable
 } from './src/source';
 
 export {
-  catchError,
-  logMiddleware,
-  observePromise, 
-  observeValue, 
-  sourceToObservable,
-  concatMapSource,
-  mergeMapSource,
-  switchMapSource,
-  FlowGroup
-}
+  flow,
+  flowGroup,
+  flowSource,
+  flowGroupSources
+} from './src/flow';

@@ -1,25 +1,27 @@
-import { of } from 'rxjs';
-import { observePromise, observeValue } from '../../index';
+import { of, from, Observable } from 'rxjs';
+import { makeObservable } from '../../index';
 
 // sync transform
-export function sync(res, observer) {
-  observeValue(`${res}-sync`, observer);
+export function sync(res) {
+  return of(`${res}-sync`);
 }
 
 // promise
-export function promise(res, observer) {
+export function promise(res) {
   let promise = Promise.resolve(`${res}-promise`);
-  observePromise(promise, observer);
+  return makeObservable(promise);
 }
 
 // Observable
-export function observable(res, observer) {
-  let observable = of(`${res}-observable`);
-  return observable.subscribe(observer);
+export function observable(res) {
+  let observable = Observable.create(observer => {
+    observer.next(`${res}-observable`);
+  });
+  return makeObservable(observable);
 }
 
 // can cancel source
-export function cancel(res, observer) {
+export function cancel(res) {
   let timer = null;
   let promise = new Promise((resolve, reject) => {
     timer = setTimeout(() => {
@@ -27,14 +29,12 @@ export function cancel(res, observer) {
     }, 2000);
   });
 
-  observePromise(promise, observer);
-
-  return function cancel() {
+  return makeObservable(promise, () => {
     clearTimeout(timer);
-  }
+  });
 }
 
 // error
-export function error(res, observer) {
-  observePromise(Promise.reject(`${res}-error`), observer);
+export function error(res) {
+  from(Promise.reject(`${res}-error`));
 }
