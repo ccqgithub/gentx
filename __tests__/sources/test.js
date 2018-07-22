@@ -26,7 +26,7 @@ export function cancel(res) {
   let promise = new Promise((resolve, reject) => {
     timer = setTimeout(() => {
       resolve(`${res}-cancel`);
-    }, 2000);
+    }, 1000);
   });
 
   return makeObservable(promise, () => {
@@ -36,5 +36,5 @@ export function cancel(res) {
 
 // error
 export function error(res) {
-  from(Promise.reject(`${res}-error`));
+  return from(Promise.reject(`${res}-error`));
 }

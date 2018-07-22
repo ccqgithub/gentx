@@ -1,12 +1,13 @@
 import { map } from 'rxjs/operators';
 import { log } from '../utils';
 
-export function logMiddleware(input, opts={}) {
-  let {flow, flowGroup, middleware} = opts;
-  let typeMsg = { before: 'in', after: 'out' }[middleware];
+export function logGuard(input, opts={}) {
+  let {flowName, groupName, guardType} = opts;
 
   // not use as a middleware
-  if (!middleware) return input;
+  if (!guardType) return input;
+
+  let typeMsg = { before: 'in', after: 'out' }[guardType];
 
   return input.pipe(
     map(value => {
@@ -18,7 +19,7 @@ export function logMiddleware(input, opts={}) {
         logData = e.message;
       }
 
-      log(`[gentx log] ~ flow ${typeMsg} <${flowGroup}>.<${flow}>:`, logData);
+      log(`[gentx log] ~ flow ${typeMsg} <${groupName}>.<${flowName}>:`, logData);
 
       return value;
     })

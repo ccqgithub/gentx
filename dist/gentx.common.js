@@ -27,16 +27,17 @@ function catchError(fn) {
   };
 }
 
-function logMiddleware(input) {
+function logGuard(input) {
   var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var flow = opts.flow,
-      flowGroup = opts.flowGroup,
-      middleware = opts.middleware;
-
-  var typeMsg = { before: 'in', after: 'out' }[middleware];
+  var flowName = opts.flowName,
+      groupName = opts.groupName,
+      guardType = opts.guardType;
 
   // not use as a middleware
-  if (!middleware) return input;
+
+  if (!guardType) return input;
+
+  var typeMsg = { before: 'in', after: 'out' }[guardType];
 
   return input.pipe(operators.map(function (value) {
     var logData = void 0;
@@ -47,7 +48,7 @@ function logMiddleware(input) {
       logData = e.message;
     }
 
-    log('[gentx log] ~ flow ' + typeMsg + ' <' + flowGroup + '>.<' + flow + '>:', logData);
+    log('[gentx log] ~ flow ' + typeMsg + ' <' + groupName + '>.<' + flowName + '>:', logData);
 
     return value;
   }));
@@ -57,10 +58,10 @@ function logMiddleware(input) {
 function makeObservable(input, cancel) {
   var observable = rxjs.from(input);
   return rxjs.Observable.create(function (observer) {
-    var unsub = observable.subscribe(observer);
+    var subscription = observable.subscribe(observer);
     return function unsubscribe() {
-      cancel();
-      unsub();
+      if (typeof cancel === 'function') cancel();
+      subscription.unsubscribe();
     };
   });
 }
@@ -106,66 +107,57 @@ function switchMapSource(source) {
   };
 }
 
-// create a flow
-function flow(flowFn, _ref) {
-  var _ref$groupName = _ref.groupName,
-      groupName = _ref$groupName === undefined ? '' : _ref$groupName,
-      _ref$name = _ref.name,
-      name = _ref$name === undefined ? '' : _ref$name,
-      _ref$beforeMiddleware = _ref.beforeMiddlewares,
-      beforeMiddlewares = _ref$beforeMiddleware === undefined ? [] : _ref$beforeMiddleware,
-      _ref$afterMiddlewares = _ref.afterMiddlewares,
-      afterMiddlewares = _ref$afterMiddlewares === undefined ? [] : _ref$afterMiddlewares;
-
-  var flowName = name || flowFn.name || 'Anonymous';
-
-  // before middlewares
-  var befores = beforeMiddlewares.map(function (middleware) {
-    return function (input) {
-      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      return middleware(input, _extends({ middleware: 'before' }, opts));
-    };
-  });
-
-  // after middlewares
-  var afters = afterMiddlewares.map(function (middleware) {
-    return function (input) {
-      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      return middleware(input, _extends({ middleware: 'after' }, opts));
-    };
-  });
-  // concat middlewares with flow
-  var fns = befores.concat(flowFn).concat(afters);
-
-  // generate flow
-  var flow = function flow(input) {
-    var opts = {
-      flow: flowName,
-      flowGroup: groupName
-    };
-    return fns.reduce(function (prev, currFn) {
-      return currFn(prev, opts);
-    }, input);
-  };
-
-  return flow;
-}
-
-// create a group flows
-function flowGroup() {
+// create a flows group
+function groupFlows() {
   var flowMap = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var _opts$groupName = opts.groupName,
+      groupName = _opts$groupName === undefined ? 'Anonymous' : _opts$groupName,
+      _opts$beforeGuards = opts.beforeGuards,
+      beforeGuards = _opts$beforeGuards === undefined ? [] : _opts$beforeGuards,
+      _opts$afterGuards = opts.afterGuards,
+      afterGuards = _opts$afterGuards === undefined ? [] : _opts$afterGuards;
 
-  var groupName = opts.name || 'Anonymous';
   var flows = {};
 
   Object.keys(flowMap).forEach(function (key) {
-    flows[key] = flow(flowMap[key], _extends({}, opts, {
-      groupName: groupName,
-      name: key
-    }));
+    var originFlow = flowMap[key];
+    // before middlewares
+    var befores = beforeGuards.map(function (guard) {
+      return function (input) {
+        var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        return guard(input, _extends({}, opts, {
+          guardType: 'before',
+          flowName: key,
+          groupName: groupName
+        }));
+      };
+    });
+    // after middlewares
+    var afters = afterGuards.map(function (guard) {
+      return function (input) {
+        var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        return guard(input, _extends({}, opts, {
+          guardType: 'after',
+          flowName: key,
+          groupName: groupName
+        }));
+      };
+    });
+    // concat middlewares with flow
+    var fns = befores.concat(originFlow).concat(afters);
+    // generate flow
+    var flow = function flow(input) {
+      var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      return fns.reduce(function (prev, currFn) {
+        return currFn(prev, opts);
+      }, input);
+    };
+
+    flows[key] = flow;
   });
 
   return flows;
@@ -174,9 +166,7 @@ function flowGroup() {
 // create flow from source
 function flowSource(source) {
   var operatorType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'concatMap';
-  var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-  var flowName = opts.name || source.name || 'Anonymous';
   var operator = {
     'concatMap': concatMapSource,
     'mergeMap': mergeMapSource,
@@ -184,37 +174,30 @@ function flowSource(source) {
   }[operatorType];
 
   if (!operator) {
-    throw new Error('[gentx error] operatorType must in [\'concatMap\', \'mergeMap\', \'switchMap\'], but get <' + operatorType + '> when flowSource <' + flowName + '>.');
+    throw new Error('[gentx error] operatorType must in [\'concatMap\', \'mergeMap\', \'switchMap\'], but get <' + operatorType + '> when flowSource <' + source.name + '>.');
   }
 
-  return flow(operator(source), _extends({}, opts, { name: flowName }));
+  return operator(source);
 }
 
-// crate a flow group from sources
-function flowGroupSources(sourceMap) {
-  var _this = this;
-
+// crate flows from sources
+function flowSources(sourceMap) {
   var operatorType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'concatMap';
-  var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-  var groupName = opts.groupName || 'Anonymous';
   var flows = {};
 
   Object.keys(sourceMap).forEach(function (key) {
-    flows[name] = _this.flowSource(sourceMap[key], operatorType, _extends({}, opts, {
-      groupName: groupName,
-      name: key
-    }));
+    var source = sourceMap[key];
+    flows[key] = flowSource(source, operatorType);
   });
 
   return flows;
 }
 
 exports.catchError = catchError;
-exports.logMiddleware = logMiddleware;
+exports.logGuard = logGuard;
 exports.makeObservable = makeObservable;
-exports.flow = flow;
-exports.flowGroup = flowGroup;
+exports.groupFlows = groupFlows;
 exports.flowSource = flowSource;
-exports.flowGroupSources = flowGroupSources;
+exports.flowSources = flowSources;
 //# sourceMappingURL=gentx.common.js.map

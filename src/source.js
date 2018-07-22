@@ -4,10 +4,10 @@ import { Observable, from } from 'rxjs';
 export function makeObservable(input, cancel) {
   let observable = from(input);
   return Observable.create(observer => {
-    let unsub = observable.subscribe(observer);
+    let subscription = observable.subscribe(observer);
     return function unsubscribe() {
-      cancel();
-      unsub();
+      if (typeof cancel === 'function') cancel();
+      subscription.unsubscribe();
     }
   });
 }

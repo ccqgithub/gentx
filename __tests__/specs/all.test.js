@@ -1,8 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { testFlows } from '../flowGroups/test';
 import { of } from 'rxjs';
-import { logMiddleware } from '../flows/middleware';
+import { srcFlows, guardFlows } from '../flowGroups/all';
+import { testFlow } from '../flows/test';
 
 const timeout = 5000;
 const copy = (data) => {
@@ -19,7 +17,7 @@ describe(
 
     const ob = of('hello');
 
-    const testFlowOb = testFlows.flow('test')(ob);
+    const testFlowOb = testFlow(ob);
     it('testFlow', async () => {
       let promise = new Promise((resolve, reject) => {
         testFlowOb.subscribe({
@@ -31,7 +29,7 @@ describe(
         .toHaveProperty('rst', 'hello-test'); 
     });
 
-    const syncOb = testFlows.flow('source.sync')(testFlowOb);
+    const syncOb = srcFlows.sync(ob);
     it('sync', async () => {
       let promise = new Promise((resolve, reject) => {
         syncOb.subscribe({
@@ -40,10 +38,10 @@ describe(
       });
       await expect(promise)
         .resolves
-        .toHaveProperty('rst', 'hello-test-sync'); 
+        .toHaveProperty('rst', 'hello-sync'); 
     });
 
-    const promiseOb = testFlows.flow('source.promise')(syncOb);
+    const promiseOb = srcFlows.promise(ob);
     it('promise', async () => {
       let promise = new Promise((resolve, reject) => {
         promiseOb.subscribe({
@@ -52,10 +50,10 @@ describe(
       });
       await expect(promise)
         .resolves
-        .toHaveProperty('rst', 'hello-test-sync-promise'); 
+        .toHaveProperty('rst', 'hello-promise'); 
     });
 
-    const observableOb = testFlows.flow('source.observable')(promiseOb);
+    const observableOb = srcFlows.observable(ob);
     it('observable', async () => {
       let promise = new Promise((resolve, reject) => {
         observableOb.subscribe({
@@ -64,10 +62,10 @@ describe(
       });
       await expect(promise)
         .resolves
-        .toHaveProperty('rst', 'hello-test-sync-promise-observable'); 
+        .toHaveProperty('rst', 'hello-observable'); 
     });
 
-    const cancelOb = testFlows.flow('source.cancel')(observableOb);
+    const cancelOb = srcFlows.cancel(ob);
     it('cancel', async () => {
       let promise = new Promise((resolve, reject) => {
         let subscription = cancelOb.subscribe({
@@ -77,14 +75,26 @@ describe(
 
         setTimeout(() => {
           reject(new Error('canceled'));
-        }, 1000);
+        }, 2000);
       });
       await expect(promise)
         .rejects
         .toHaveProperty('message', 'canceled'); 
     });
 
-    const errorOb = testFlows.flow('source.error')(cancelOb);
+    const cancelOb2 = srcFlows.cancel(ob);
+    it('not cancel', async () => {
+      let promise = new Promise((resolve, reject) => {
+        cancelOb2.subscribe({
+          next(v) { resolve({ rst: v }) }
+        });
+      });
+      await expect(promise)
+        .resolves
+        .toHaveProperty('rst', 'hello-cancel'); 
+    });
+
+    const errorOb = srcFlows.error(ob);
     it('error', async () => {
       let promise = new Promise((resolve, reject) => {
         errorOb.subscribe({
@@ -93,23 +103,19 @@ describe(
       });
       await expect(promise)
         .rejects
-        .toHaveProperty('message', 'hello-test-sync-promise-observable-cancel-error'); 
+        .toHaveProperty('message', 'hello-error'); 
     });
 
-    testFlows.setBeforeMiddlewares([logMiddleware]);
-    testFlows.setAfterMiddlewares([logMiddleware]);
-    const middlewareOb = testFlows.flow('test')(cancelOb);
-    it('middleware', async () => {
+    const guardOb = guardFlows.test(ob);
+    it('guard', async () => {
       let promise = new Promise((resolve, reject) => {
-        middlewareOb.subscribe({
+        guardOb.subscribe({
           next(v) { resolve({ rst: v }) }
         })
       });
-      let middlewareBeforeMsg = `-middleware-before-group.test`;
-      let middlewareAfterMsg = `-middleware-after-group.test`;
       await expect(promise)
         .resolves
-        .toHaveProperty('rst', `hello-test-sync-promise-observable-cancel${middlewareBeforeMsg}-test${middlewareAfterMsg}`); 
+        .toHaveProperty('rst', 'hello-guard-before-guard.test-test-guard-after-guard.test'); 
     });
 
   },

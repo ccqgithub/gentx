@@ -3,16 +3,15 @@ export {
 } from './src/utils';
 
 export { 
-  logMiddleware 
-} from './src/middleware/log';
+  logGuard 
+} from './src/guards/log';
 
 export {
   makeObservable
 } from './src/source';
 
 export {
-  flow,
-  flowGroup,
+  groupFlows,
   flowSource,
-  flowGroupSources
+  flowSources
 } from './src/flow';

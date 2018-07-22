@@ -27,63 +27,54 @@ export function switchMapSource(source) {
   };
 }
 
-// create a flow
-export function flow(flowFn, {
-  groupName='',
-  name='',
-  beforeMiddlewares=[],
-  afterMiddlewares=[]
-}) {
-  const flowName = name || flowFn.name || 'Anonymous';
-
-  // before middlewares
-  const befores = beforeMiddlewares.map(middleware => {
-    return (input, opts={}) => {
-      return middleware(input, { middleware: 'before', ...opts });
-    }
-  });
-
-  // after middlewares
-  const afters = afterMiddlewares.map(middleware => {
-    return (input, opts={}) => {
-      return middleware(input, { middleware: 'after', ...opts });
-    }
-  });;
-
-  // concat middlewares with flow
-  const fns = befores.concat(flowFn).concat(afters);
-
-  // generate flow
-  const flow = function flow(input) {
-    const opts = {
-      flow: flowName,
-      flowGroup: groupName
-    };
-    return fns.reduce((prev, currFn) => currFn(prev, opts), input);
-  }
-
-  return flow;
-}
-
-// create a group flows
-export function flowGroup(flowMap={}, opts={}) {
-  const groupName = opts.name || 'Anonymous';
+// create a flows group
+export function groupFlows(flowMap={}, opts={}) {
+  const {
+    groupName= 'Anonymous',
+    beforeGuards= [],
+    afterGuards= []
+  } = opts;
   const flows = {};
 
   Object.keys(flowMap).forEach(key => {
-    flows[key] = flow(flowMap[key], {
-      ...opts,
-      groupName: groupName,
-      name: key
+    const originFlow = flowMap[key];
+    // before middlewares
+    const befores = beforeGuards.map(guard => {
+      return (input, opts={}) => {
+        return guard(input, { 
+          ...opts,
+          guardType: 'before',  
+          flowName: key,
+          groupName: groupName
+        });
+      }
     });
+    // after middlewares
+    const afters = afterGuards.map(guard => {
+      return (input, opts={}) => {
+        return guard(input, { 
+          ...opts,
+          guardType: 'after',  
+          flowName: key,
+          groupName: groupName
+        });
+      }
+    });
+    // concat middlewares with flow
+    const fns = befores.concat(originFlow).concat(afters);
+    // generate flow
+    const flow = function flow(input, opts={}) {
+      return fns.reduce((prev, currFn) => currFn(prev, opts), input);
+    }
+
+    flows[key] = flow;
   });
 
   return flows;
 }
 
 // create flow from source
-export function flowSource(source, operatorType='concatMap', opts={}) {
-  let flowName = opts.name || source.name || 'Anonymous';
+export function flowSource(source, operatorType='concatMap') {
   let operator = {
     'concatMap': concatMapSource,
     'mergeMap': mergeMapSource,
@@ -91,23 +82,19 @@ export function flowSource(source, operatorType='concatMap', opts={}) {
   }[operatorType];
 
   if (!operator) {
-    throw new Error(`[gentx error] operatorType must in ['concatMap', 'mergeMap', 'switchMap'], but get <${operatorType}> when flowSource <${flowName}>.`)
+    throw new Error(`[gentx error] operatorType must in ['concatMap', 'mergeMap', 'switchMap'], but get <${operatorType}> when flowSource <${source.name}>.`)
   }
 
-  return flow(operator(source), { ...opts, name: flowName });
+  return operator(source);
 }
 
-// crate a flow group from sources
-export function flowGroupSources(sourceMap, operatorType='concatMap', opts={}) {
-  const groupName = opts.groupName || 'Anonymous';
+// crate flows from sources
+export function flowSources(sourceMap, operatorType='concatMap') {
   const flows = {};
 
   Object.keys(sourceMap).forEach(key => {
-    flows[name] = this.flowSource(sourceMap[key], operatorType, {
-      ...opts,
-      groupName: groupName,
-      name: key
-    });
+    let source = sourceMap[key];
+    flows[key] = flowSource(source, operatorType);
   });
 
   return flows;
