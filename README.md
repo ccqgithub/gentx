@@ -29,7 +29,7 @@ import {
 
 > 这里的概念指`gentx`新加入的概念，其他rxjs的概念请看[RxJS文档](http://reactivex.io/rxjs/manual/overview.html), 或[RxJS文档2](https://robin-front.gitbooks.io/rxjs-doc-chinese/content/why_rxjs.html), 或[RxJS中文文档](https://cn.rx.js.org/manual/index.html)。
 
-### 0：GentX的数据理念
+### 0：GentX的数据理念
 
 GentX想应用中数据管理的所有部分分为三个部分：
 
