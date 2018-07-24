@@ -194,10 +194,109 @@ function flowSources(sourceMap) {
   return flows;
 }
 
+function gentx() {
+  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var _opts$$subs = opts.$subs,
+      $subs = _opts$$subs === undefined ? '$subs' : _opts$$subs,
+      _opts$$unsubscribe = opts.$unsubscribe,
+      $unsubscribe = _opts$$unsubscribe === undefined ? '$unsubscribe' : _opts$$unsubscribe;
+
+
+  return function gentxDecorator(target) {
+    target.prototype[$subs] = {};
+    target.prototype[$unsubscribe] = function (ns) {
+      var subscriptionsKey = this[$subs];
+      var comp = this;
+      var subs = comp[subscriptionsKey];
+
+      try {
+        // unsubscribe one
+        if (ns) {
+          var sub = subs[ns];
+          if (sub && typeof sub.unsubscribe === 'function') {
+            sub.unsubscribe();
+          }
+          delete subs[ns];
+          return;
+        }
+
+        // unsubscribe all
+        Object.keys(subs).forEach(function (key) {
+          var sub = subs[key];
+          if (sub && typeof sub.unsubscribe === 'function') {
+            sub.unsubscribe();
+          }
+          delete subs[key];
+        });
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    // componentWillUnMount
+    target.prototype._gentx_componentWillUnMount = target.prototype.componentWillUnMount;
+    target.prototype.componentWillUnMount = function () {
+      this[$unsubscribe]();
+      this._gentx_componentWillUnMount();
+    };
+  };
+}
+
+var VueGentX = {};
+
+VueGentX.install = function (Vue) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var _options$$subs = options.$subs,
+      $subs = _options$$subs === undefined ? '$subs' : _options$$subs,
+      _options$$unsubscribe = options.$unsubscribe,
+      $unsubscribe = _options$$unsubscribe === undefined ? '$unsubscribe' : _options$$unsubscribe;
+
+
+  Vue.prototype[$unsubscribe] = function (ns) {
+    var vm = this;
+    var subs = vm[$subs];
+
+    try {
+      // unsubscribe one
+      if (ns) {
+        var sub = subs[ns];
+        if (sub && typeof sub.unsubscribe === 'function') {
+          sub.unsubscribe();
+        }
+        delete subs[ns];
+        return;
+      }
+
+      // unsubscribe all
+      Object.keys(subs).forEach(function (key) {
+        var sub = subs[key];
+        if (sub && typeof sub.unsubscribe === 'function') {
+          sub.unsubscribe();
+        }
+        delete subs[key];
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  // mixin
+  Vue.mixin({
+    beforeCreate: function beforeCreate() {
+      this[$subs] = {};
+    },
+    beforeDestroy: function beforeDestroy() {
+      this[$unsubscribe]();
+    }
+  });
+};
+
 exports.catchError = catchError;
 exports.logGuard = logGuard;
 exports.makeObservable = makeObservable;
 exports.groupFlows = groupFlows;
 exports.flowSource = flowSource;
 exports.flowSources = flowSources;
+exports.gentx = gentx;
+exports.VueGentX = VueGentX;
 //# sourceMappingURL=gentx.common.js.map

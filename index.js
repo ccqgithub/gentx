@@ -15,3 +15,11 @@ export {
   flowSource,
   flowSources
 } from './src/flow';
+
+export {
+  gentx
+} from './src/tools/react';
+
+export {
+  VueGentX
+} from './src/tools/vue';

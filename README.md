@@ -230,3 +230,118 @@ export const srcFlows = groupFlows(flowSources(TestSoureces), {
 
 ## 推荐和其他工具配合使用
 
+### 和`React`一起使用
+
+建议：`rxjs` + `gentx` + `mobx` + `mobx-react` + `react`。
+
+为react组件提供一个装饰器`gentx`, 使用装饰器后，组件实例会多两个属性`$subs`, `$unsubscribe`。
+
+- `$subs`: 用来挂载组件内进行的所有订阅(rxjs)。
+- `$unsubscribe(key)`: 取消绑定在`$subs`上得订阅，key不传时取消所有订阅，`componentWillUnmount`时会默认调用此函数来移除所有订阅。
+
+```js
+import {gentx} from 'gentx';
+import React from 'react';
+import {from} from 'rxjs';
+
+@gentx({
+  $subs: '$subs', // 可以不传，默认`$shubs`
+  $unsubscribe: '$unsubscribe' //可以不传，默认`$unsubscribe`
+})
+class App extends React.Component {
+  constructor() {
+    supper();
+  }
+
+  componentDidMount() {
+    let promise = api.get('xxx');
+    let observable = from([1]);
+
+    // 挂载订阅
+    this.$subs.test = observable.subscribe({
+      // ...
+    });
+
+    this.$subs.test2 = observable.subscribe({
+      // ...
+    });
+
+    this.$subs.test3 = observable.subscribe({
+      // ...
+    });
+  }
+
+  // 可以不写，因为默认会执行这个行为
+  componentWillUnmount() {
+    // 取消所有订阅
+    this.$unsubscribe();
+  }
+
+  // 点击test按钮
+  onClickTest() {
+    //...
+    // 取消上一次test订阅，并新建一个test订阅
+    this.$unsubscribe(test);
+    this.$subs.test = observable.subscribe({
+      // ...
+    });
+  }
+}
+```
+
+### 和`Vue`一起使用
+
+建议：`rxjs` + `gentx` + `vuex(不用它的action)` + `vue`。
+
+为vue提供一个插件`VueGentX`, 安装插件后，组件实例会多两个属性`$subs`, `$unsubscribe`。
+
+- `$subs`: 用来挂载组件内进行的所有订阅(rxjs)。
+- `$unsubscribe(key)`: 取消绑定在`$subs`上得订阅，key不传时取消所有订阅，`beforeDestory`时会默认调用此函数来移除所有订阅。
+
+```js
+import Vue from 'vue';
+import {VueGentX} from 'gentx';
+
+new Vue({
+  el: '#app',
+  data() {
+    //...
+  },
+
+  mounted() {
+    let promise = api.get('xxx');
+    let observable = from([1]);
+
+    // 挂载订阅
+    this.$subs.test = observable.subscribe({
+      // ...
+    });
+
+    this.$subs.test2 = observable.subscribe({
+      // ...
+    });
+
+    this.$subs.test3 = observable.subscribe({
+      // ...
+    });
+  },
+
+  // 可以不写，因为默认会执行这个行为
+  beforeDestroy() {
+    // 取消所有订阅
+    this.$unsubscribe();
+  }
+
+  methods: {
+    // 点击test按钮
+    onClickTest() {
+      //...
+      // 取消上一次test订阅，并新建一个test订阅
+      this.$unsubscribe(test);
+      this.$subs.test = observable.subscribe({
+        // ...
+      });
+    }
+  }
+})
+```
