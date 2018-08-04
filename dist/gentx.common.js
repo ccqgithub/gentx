@@ -216,6 +216,7 @@ function gentx() {
       var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'anonymous';
       var removePrevious = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
+      var vm = this;
       var subs = vm['_gentx_subs_'];
       if (!subs[name]) subs[name] = [];
 
