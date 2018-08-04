@@ -196,37 +196,58 @@ function flowSources(sourceMap) {
 
 function gentx() {
   var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var _opts$$subs = opts.$subs,
-      $subs = _opts$$subs === undefined ? '$subs' : _opts$$subs,
+  var _opts$$bindSub = opts.$bindSub,
+      $bindSub = _opts$$bindSub === undefined ? '$bindSub' : _opts$$bindSub,
       _opts$$unsubscribe = opts.$unsubscribe,
       $unsubscribe = _opts$$unsubscribe === undefined ? '$unsubscribe' : _opts$$unsubscribe;
 
 
   return function gentxDecorator(target) {
-    target.prototype[$subs] = {};
+    target.prototype['_gentx_subs_'] = {};
+
+    // bind sub
+    target.prototype[$bindSub] = function (sub) {
+      var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'anonymous';
+      var removePrevious = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+      var subs = vm['_gentx_subs_'];
+      if (!subs[name]) subs[name] = [];
+
+      // remove previous
+      if (name != 'anonymous' && removePrevious) this[$unsubscribe](name);
+
+      // bind sub
+      subs[name].push(sub);
+    };
+
+    // unsubscribe
     target.prototype[$unsubscribe] = function (ns) {
-      var subscriptionsKey = this[$subs];
-      var comp = this;
-      var subs = comp[subscriptionsKey];
+      var vm = this;
+      var subs = vm['_gentx_subs_'];
 
       try {
         // unsubscribe one
-        if (ns) {
-          var sub = subs[ns];
-          if (sub && typeof sub.unsubscribe === 'function') {
-            sub.unsubscribe();
-          }
+        if (ns && subs[ns] && subs[ns].length) {
+          subs[ns].forEach(function (sub) {
+            if (sub && typeof sub.unsubscribe === 'function') {
+              sub.unsubscribe();
+            }
+          });
           delete subs[ns];
           return;
         }
 
         // unsubscribe all
-        Object.keys(subs).forEach(function (key) {
-          var sub = subs[key];
-          if (sub && typeof sub.unsubscribe === 'function') {
-            sub.unsubscribe();
+        Object.keys(subs).forEach(function (ns) {
+          if (subs[ns] && subs[ns].length) {
+            subs[ns].forEach(function (sub) {
+              if (sub && typeof sub.unsubscribe === 'function') {
+                sub.unsubscribe();
+              }
+            });
+            delete subs[ns];
+            return;
           }
-          delete subs[key];
         });
       } catch (e) {
         console.log(e);
@@ -234,10 +255,10 @@ function gentx() {
     };
 
     // componentWillUnMount
-    target.prototype._gentx_componentWillUnMount = target.prototype.componentWillUnMount;
+    target.prototype._gentx_componentWillUnMount_ = target.prototype.componentWillUnMount;
     target.prototype.componentWillUnMount = function () {
       this[$unsubscribe]();
-      this._gentx_componentWillUnMount();
+      this._gentx_componentWillUnMount_();
     };
   };
 }
@@ -246,34 +267,55 @@ var VueGentX = {};
 
 VueGentX.install = function (Vue) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var _options$$subs = options.$subs,
-      $subs = _options$$subs === undefined ? '$subs' : _options$$subs,
+  var _options$$bindSub = options.$bindSub,
+      $bindSub = _options$$bindSub === undefined ? '$bindSub' : _options$$bindSub,
       _options$$unsubscribe = options.$unsubscribe,
       $unsubscribe = _options$$unsubscribe === undefined ? '$unsubscribe' : _options$$unsubscribe;
 
+  // bind sub
 
+  Vue.prototype[$bindSub] = function (sub) {
+    var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'anonymous';
+    var removePrevious = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+    var subs = vm['_gentx_subs_'];
+    if (!subs[name]) subs[name] = [];
+
+    // remove previous
+    if (name != 'anonymous' && removePrevious) this[$unsubscribe](name);
+
+    // bind sub
+    subs[name].push(sub);
+  };
+
+  // unsubscribe
   Vue.prototype[$unsubscribe] = function (ns) {
     var vm = this;
-    var subs = vm[$subs];
+    var subs = vm['_gentx_subs_'];
 
     try {
       // unsubscribe one
-      if (ns) {
-        var sub = subs[ns];
-        if (sub && typeof sub.unsubscribe === 'function') {
-          sub.unsubscribe();
-        }
+      if (ns && subs[ns] && subs[ns].length) {
+        subs[ns].forEach(function (sub) {
+          if (sub && typeof sub.unsubscribe === 'function') {
+            sub.unsubscribe();
+          }
+        });
         delete subs[ns];
         return;
       }
 
       // unsubscribe all
-      Object.keys(subs).forEach(function (key) {
-        var sub = subs[key];
-        if (sub && typeof sub.unsubscribe === 'function') {
-          sub.unsubscribe();
+      Object.keys(subs).forEach(function (ns) {
+        if (subs[ns] && subs[ns].length) {
+          subs[ns].forEach(function (sub) {
+            if (sub && typeof sub.unsubscribe === 'function') {
+              sub.unsubscribe();
+            }
+          });
+          delete subs[ns];
+          return;
         }
-        delete subs[key];
       });
     } catch (e) {
       console.log(e);
@@ -283,7 +325,7 @@ VueGentX.install = function (Vue) {
   // mixin
   Vue.mixin({
     beforeCreate: function beforeCreate() {
-      this[$subs] = {};
+      this._gentx_subs_ = {};
     },
     beforeDestroy: function beforeDestroy() {
       this[$unsubscribe]();
