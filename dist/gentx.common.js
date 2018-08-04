@@ -218,12 +218,12 @@ function gentx() {
 
       var vm = this;
       var subs = vm['_gentx_subs_'];
-      if (!subs[name]) subs[name] = [];
 
       // remove previous
       if (name != 'anonymous' && removePrevious) this[conf.$unsubscribe](name);
 
       // bind sub
+      if (!subs[name]) subs[name] = [];
       subs[name].push(sub);
     };
 
@@ -295,12 +295,12 @@ VueGentX.install = function (Vue) {
     var removePrevious = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
     var subs = vm['_gentx_subs_'];
-    if (!subs[name]) subs[name] = [];
 
     // remove previous
     if (name != 'anonymous' && removePrevious) this[$unsubscribe](name);
 
     // bind sub
+    if (!subs[name]) subs[name] = [];
     subs[name].push(sub);
   };
 

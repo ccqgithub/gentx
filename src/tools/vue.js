@@ -9,13 +9,13 @@ VueGentX.install = function(Vue, options={}) {
   // bind sub
   Vue.prototype[$bindSub] = function(sub, name='anonymous', removePrevious=true) {
     const subs = vm['_gentx_subs_'];
-    if (!subs[name]) subs[name] = [];
 
     // remove previous
     if (name != 'anonymous' && removePrevious) 
       this[$unsubscribe](name);  
     
     // bind sub
+    if (!subs[name]) subs[name] = [];
     subs[name].push(sub);
   }
 

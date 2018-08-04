@@ -11,13 +11,13 @@ export function gentx(opts={}) {
     target.prototype[conf.$bindSub] = function(sub, name='anonymous', removePrevious=true) {
       const vm = this;
       const subs = vm['_gentx_subs_'];
-      if (!subs[name]) subs[name] = [];
-  
+      
       // remove previous
       if (name != 'anonymous' && removePrevious) 
         this[conf.$unsubscribe](name);  
       
       // bind sub
+      if (!subs[name]) subs[name] = [];
       subs[name].push(sub);
     }
 
