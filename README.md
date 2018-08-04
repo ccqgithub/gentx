@@ -234,6 +234,7 @@ export const srcFlows = groupFlows(flowSources(TestSoureces), {
 建议：`rxjs` + `gentx` + `mobx` + `mobx-react` + `react`。
 
 为react组件提供一个装饰器`gentx`, 使用装饰器后，组件实例会多两个属性`$bindSub`, `$unsubscribe`。
+不能用于function组件，如果与其他装饰器一起使用，确保gentx是最接近组件的。
 
 - `$bindSub(sub, name, removePrevious=true)`: 用来绑定组件内进行的所有订阅(rxjs)，便于手动取消订阅和组件unmount时自动取消订阅。
 - `$unsubscribe(name)`: 取消绑定在`$subs`上得订阅，`name`不传时取消所有订阅，`componentWillUnmount`时会默认调用此函数来移除所有订阅。

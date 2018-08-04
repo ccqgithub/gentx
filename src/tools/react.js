@@ -58,7 +58,7 @@ export function gentx(opts={}) {
   }
 
   // @gentx: opts is React.Component
-  if (typeof opts === 'object' && typeof opts.prototype === 'object') {
+  if (typeof opts === 'function' && typeof opts.prototype === 'object') {
     return gentxDecorator(opts);
   }
 

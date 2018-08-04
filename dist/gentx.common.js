@@ -264,7 +264,7 @@ function gentx() {
   }
 
   // @gentx: opts is React.Component
-  if ((typeof opts === 'undefined' ? 'undefined' : _typeof(opts)) === 'object' && _typeof(opts.prototype) === 'object') {
+  if (typeof opts === 'function' && _typeof(opts.prototype) === 'object') {
     return gentxDecorator(opts);
   }
 
