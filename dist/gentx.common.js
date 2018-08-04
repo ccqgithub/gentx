@@ -203,11 +203,16 @@ function flowSources(sourceMap) {
 function gentx() {
   var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+  var conf = {
+    $bindSub: '$bindSub',
+    $unsubscribe: '$unsubscribe'
+  };
+
   function gentxDecorator(target) {
     target.prototype['_gentx_subs_'] = {};
 
     // bind sub
-    target.prototype[$bindSub] = function (sub) {
+    target.prototype[conf.$bindSub] = function (sub) {
       var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'anonymous';
       var removePrevious = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
@@ -215,14 +220,14 @@ function gentx() {
       if (!subs[name]) subs[name] = [];
 
       // remove previous
-      if (name != 'anonymous' && removePrevious) this[$unsubscribe](name);
+      if (name != 'anonymous' && removePrevious) this[conf.$unsubscribe](name);
 
       // bind sub
       subs[name].push(sub);
     };
 
     // unsubscribe
-    target.prototype[$unsubscribe] = function (ns) {
+    target.prototype[conf.$unsubscribe] = function (ns) {
       var vm = this;
       var subs = vm['_gentx_subs_'];
 
@@ -258,7 +263,7 @@ function gentx() {
     // componentWillUnMount
     target.prototype._gentx_componentWillUnMount_ = target.prototype.componentWillUnMount;
     target.prototype.componentWillUnMount = function () {
-      this[$unsubscribe]();
+      this[conf.$unsubscribe]();
       this._gentx_componentWillUnMount_();
     };
   }
@@ -269,12 +274,7 @@ function gentx() {
   }
 
   // @gentx({})
-  var _opts$$bindSub = opts.$bindSub,
-      $bindSub = _opts$$bindSub === undefined ? '$bindSub' : _opts$$bindSub,
-      _opts$$unsubscribe = opts.$unsubscribe,
-      $unsubscribe = _opts$$unsubscribe === undefined ? '$unsubscribe' : _opts$$unsubscribe;
-
-
+  conf = _extends({}, conf, opts);
   return gentxDecorator;
 }
 

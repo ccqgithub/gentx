@@ -1,22 +1,27 @@
 export function gentx(opts={}) {
+  let conf = {
+    $bindSub: '$bindSub',
+    $unsubscribe: '$unsubscribe',
+  }
+
   function gentxDecorator(target) {
     target.prototype['_gentx_subs_'] = {};
 
     // bind sub
-    target.prototype[$bindSub] = function(sub, name='anonymous', removePrevious=true) {
+    target.prototype[conf.$bindSub] = function(sub, name='anonymous', removePrevious=true) {
       const subs = vm['_gentx_subs_'];
       if (!subs[name]) subs[name] = [];
   
       // remove previous
       if (name != 'anonymous' && removePrevious) 
-        this[$unsubscribe](name);  
+        this[conf.$unsubscribe](name);  
       
       // bind sub
       subs[name].push(sub);
     }
 
     // unsubscribe
-    target.prototype[$unsubscribe] = function(ns) {
+    target.prototype[conf.$unsubscribe] = function(ns) {
       const vm = this;
       const subs = vm['_gentx_subs_'];
   
@@ -52,7 +57,7 @@ export function gentx(opts={}) {
     // componentWillUnMount
     target.prototype._gentx_componentWillUnMount_ = target.prototype.componentWillUnMount;
     target.prototype.componentWillUnMount = function() {
-      this[$unsubscribe]();
+      this[conf.$unsubscribe]();
       this._gentx_componentWillUnMount_();
     }
   }
@@ -63,10 +68,6 @@ export function gentx(opts={}) {
   }
 
   // @gentx({})
-  let {
-    $bindSub= '$bindSub',
-    $unsubscribe= '$unsubscribe'
-  } = opts;
-
+  conf = { ...conf, ...opts };
   return gentxDecorator;
 }

@@ -1,6 +1,6 @@
 {
   "name": "gentx",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "> RxJS 辅助工具",
   "main": "dist/gentx.common.js",
   "devDependencies": {
