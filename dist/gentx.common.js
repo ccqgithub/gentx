@@ -66,6 +66,12 @@ function makeObservable(input, cancel) {
   });
 }
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
 var _extends = Object.assign || function (target) {
   for (var i = 1; i < arguments.length; i++) {
     var source = arguments[i];
@@ -196,13 +202,8 @@ function flowSources(sourceMap) {
 
 function gentx() {
   var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var _opts$$bindSub = opts.$bindSub,
-      $bindSub = _opts$$bindSub === undefined ? '$bindSub' : _opts$$bindSub,
-      _opts$$unsubscribe = opts.$unsubscribe,
-      $unsubscribe = _opts$$unsubscribe === undefined ? '$unsubscribe' : _opts$$unsubscribe;
 
-
-  return function gentxDecorator(target) {
+  function gentxDecorator(target) {
     target.prototype['_gentx_subs_'] = {};
 
     // bind sub
@@ -260,7 +261,21 @@ function gentx() {
       this[$unsubscribe]();
       this._gentx_componentWillUnMount_();
     };
-  };
+  }
+
+  // @gentx: opts is React.Component
+  if ((typeof opts === 'undefined' ? 'undefined' : _typeof(opts)) === 'object' && _typeof(opts.prototype) === 'object') {
+    return gentxDecorator(opts);
+  }
+
+  // @gentx({})
+  var _opts$$bindSub = opts.$bindSub,
+      $bindSub = _opts$$bindSub === undefined ? '$bindSub' : _opts$$bindSub,
+      _opts$$unsubscribe = opts.$unsubscribe,
+      $unsubscribe = _opts$$unsubscribe === undefined ? '$unsubscribe' : _opts$$unsubscribe;
+
+
+  return gentxDecorator;
 }
 
 var VueGentX = {};

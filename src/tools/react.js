@@ -1,10 +1,5 @@
 export function gentx(opts={}) {
-  let {
-    $bindSub= '$bindSub',
-    $unsubscribe= '$unsubscribe'
-  } = opts;
-
-  return function gentxDecorator(target) {
+  function gentxDecorator(target) {
     target.prototype['_gentx_subs_'] = {};
 
     // bind sub
@@ -61,4 +56,17 @@ export function gentx(opts={}) {
       this._gentx_componentWillUnMount_();
     }
   }
+
+  // @gentx: opts is React.Component
+  if (typeof opts === 'object' && typeof opts.prototype === 'object') {
+    return gentxDecorator(opts);
+  }
+
+  // @gentx({})
+  let {
+    $bindSub= '$bindSub',
+    $unsubscribe= '$unsubscribe'
+  } = opts;
+
+  return gentxDecorator;
 }
