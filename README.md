@@ -224,7 +224,6 @@ export const srcFlows = groupFlows(flowSources(TestSoureces), {
   |---- apis       ## api请求
   |---- sources    ## 动态数据源
   |---- flows      ## 数据流
-  |---- flowGroups ## 数据流组
   |---- stores     ## 数据存储
 ```
 

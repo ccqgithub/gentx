@@ -1,5 +1,5 @@
 import { of } from 'rxjs';
-import { srcFlows, guardFlows } from '../flowGroups/all';
+import { srcFlows, guardFlows } from '../flows/all';
 import { testFlow } from '../flows/test';
 
 const timeout = 5000;
