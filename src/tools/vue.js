@@ -8,6 +8,7 @@ VueGentX.install = function(Vue, options={}) {
 
   // bind sub
   Vue.prototype[$bindSub] = function(sub, name='anonymous', removePrevious=true) {
+    const vm = this;
     const subs = vm['_gentx_subs_'];
 
     // remove previous
