@@ -234,18 +234,18 @@ export const srcFlows = groupFlows(flowSources(TestSoureces), {
 
 建议：`rxjs` + `gentx` + `mobx` + `mobx-react` + `react`。
 
-为react组件提供一个装饰器`gentx`, 使用装饰器后，组件实例会多两个属性`$subs`, `$unsubscribe`。
+为react组件提供一个装饰器`gentx`, 使用装饰器后，组件实例会多两个属性`$bindSub`, `$unsubscribe`。
 
-- `$subs`: 用来挂载组件内进行的所有订阅(rxjs)。
-- `$unsubscribe(key)`: 取消绑定在`$subs`上得订阅，key不传时取消所有订阅，`componentWillUnmount`时会默认调用此函数来移除所有订阅。
+- `$bindSub(sub, name, removePrevious=true)`: 用来绑定组件内进行的所有订阅(rxjs)，便于手动取消订阅和组件unmount时自动取消订阅。
+- `$unsubscribe(name)`: 取消绑定在`$subs`上得订阅，`name`不传时取消所有订阅，`componentWillUnmount`时会默认调用此函数来移除所有订阅。
 
 ```js
-import {gentx} from 'gentx';
+import { gentx } from 'gentx';
 import React from 'react';
-import {from} from 'rxjs';
+import { of } from 'rxjs';
 
 @gentx({
-  $subs: '$subs', // 可以不传，默认`$shubs`
+  $bindSub: '$bindSub', // 可以不传，默认`$bindSub`
   $unsubscribe: '$unsubscribe' //可以不传，默认`$unsubscribe`
 })
 class App extends React.Component {
@@ -258,17 +258,21 @@ class App extends React.Component {
     let observable = from([1]);
 
     // 挂载订阅
-    this.$subs.test = observable.subscribe({
+    let sub1 = observable.subscribe({
       // ...
     });
+    this.$bindSub(sub1, 'sub1');
 
-    this.$subs.test2 = observable.subscribe({
+    let sub2 = observable.subscribe({
       // ...
     });
+    this.$bindSub(sub2, 'sub2');
 
-    this.$subs.test3 = observable.subscribe({
+    let sub3 = observable.subscribe({
       // ...
     });
+    this.$bindSub(sub3, 'sub3');
+
   }
 
   // 可以不写，因为默认会执行这个行为
@@ -281,10 +285,13 @@ class App extends React.Component {
   onClickTest() {
     //...
     // 取消上一次test订阅，并新建一个test订阅
-    this.$unsubscribe(test);
-    this.$subs.test = observable.subscribe({
-      // ...
-    });
+    this.$unsubscribe('test');
+    this.bindSub(
+      observable.subscribe({
+        // ...
+      }),
+      'test'
+    );
   }
 }
 ```
@@ -293,14 +300,14 @@ class App extends React.Component {
 
 建议：`rxjs` + `gentx` + `vuex(不用它的action)` + `vue`。
 
-为vue提供一个插件`VueGentX`, 安装插件后，组件实例会多两个属性`$subs`, `$unsubscribe`。
+为vue提供一个插件`VueGentX`, 安装插件后，组件实例会多两个属性`$bindSub`, `$unsubscribe`。
 
-- `$subs`: 用来挂载组件内进行的所有订阅(rxjs)。
-- `$unsubscribe(key)`: 取消绑定在`$subs`上得订阅，key不传时取消所有订阅，`beforeDestory`时会默认调用此函数来移除所有订阅。
+- `$bindSub(sub, name, removePrevious=true)`: 用来绑定组件内进行的所有订阅(rxjs)，便于手动取消订阅和组件unmount时自动取消订阅。
+- `$unsubscribe(name)`: 取消绑定在`$subs`上得订阅，`name`不传时取消所有订阅，`componentWillUnmount`时会默认调用此函数来移除所有订阅。
 
 ```js
 import Vue from 'vue';
-import {VueGentX} from 'gentx';
+import { VueGentX } from 'gentx';
 
 new Vue({
   el: '#app',
@@ -313,17 +320,20 @@ new Vue({
     let observable = from([1]);
 
     // 挂载订阅
-    this.$subs.test = observable.subscribe({
+    let sub1 = observable.subscribe({
       // ...
     });
+    this.$bindSub(sub1, 'sub1');
 
-    this.$subs.test2 = observable.subscribe({
+    let sub2 = observable.subscribe({
       // ...
     });
+    this.$bindSub(sub2, 'sub2');
 
-    this.$subs.test3 = observable.subscribe({
+    let sub3 = observable.subscribe({
       // ...
     });
+    this.$bindSub(sub3, 'sub3');
   },
 
   // 可以不写，因为默认会执行这个行为
@@ -337,10 +347,13 @@ new Vue({
     onClickTest() {
       //...
       // 取消上一次test订阅，并新建一个test订阅
-      this.$unsubscribe(test);
-      this.$subs.test = observable.subscribe({
-        // ...
-      });
+      this.$unsubscribe('test');
+      this.bindSub(
+        observable.subscribe({
+          // ...
+        }),
+        'test'
+      );
     }
   }
 })

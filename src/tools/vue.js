@@ -2,32 +2,51 @@ const VueGentX = {};
 
 VueGentX.install = function(Vue, options={}) {
   let {
-    $subs= '$subs',
+    $bindSub= '$bindSub',
     $unsubscribe= '$unsubscribe'
   } = options;
 
+  // bind sub
+  Vue.prototype[$bindSub] = function(sub, name='anonymous', removePrevious=true) {
+    const subs = vm['_gentx_subs_'];
+    if (!subs[name]) subs[name] = [];
+
+    // remove previous
+    if (name != 'anonymous' && removePrevious) 
+      this[$unsubscribe](name);  
+    
+    // bind sub
+    subs[name].push(sub);
+  }
+
+  // unsubscribe
   Vue.prototype[$unsubscribe] = function(ns) {
     const vm = this;
-    const subs = vm[$subs];
+    const subs = vm['_gentx_subs_'];
 
     try {
       // unsubscribe one
-      if (ns) {
-        let sub = subs[ns]; 
-        if (sub && typeof sub.unsubscribe === 'function') {
-          sub.unsubscribe();
-        }
+      if (ns && subs[ns] && subs[ns].length) {
+        subs[ns].forEach(sub => {
+          if (sub && typeof sub.unsubscribe === 'function') {
+            sub.unsubscribe();
+          }
+        });
         delete subs[ns];
         return;
       }
 
       // unsubscribe all
-      Object.keys(subs).forEach(key => {
-        let sub = subs[key];
-        if (sub && typeof sub.unsubscribe === 'function') {
-          sub.unsubscribe();
+      Object.keys(subs).forEach(ns => {
+        if (subs[ns] && subs[ns].length) {
+          subs[ns].forEach(sub => {
+            if (sub && typeof sub.unsubscribe === 'function') {
+              sub.unsubscribe();
+            }
+          });
+          delete subs[ns];
+          return;
         }
-        delete subs[key];
       });
     } catch(e) {
       console.log(e);
@@ -37,7 +56,7 @@ VueGentX.install = function(Vue, options={}) {
   // mixin
   Vue.mixin({
     beforeCreate() {
-      this[$subs] = {};
+      this._gentx_subs_ = {};
     },
     beforeDestroy() {
       this[$unsubscribe]();
@@ -45,4 +64,4 @@ VueGentX.install = function(Vue, options={}) {
   });
 }
 
-export {VueGentX};
+export { VueGentX };
