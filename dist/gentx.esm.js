@@ -1,9 +1,5 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var operators = require('rxjs/operators');
-var rxjs = require('rxjs');
+import { map, concatMap, mergeMap, switchMap } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
 
 // if condition is false, throw message 
 
@@ -37,7 +33,7 @@ function logGuard(input) {
     before: 'in',
     after: 'out'
   }[guardType];
-  return input.pipe(operators.map(function (value) {
+  return input.pipe(map(function (value) {
     var logData;
 
     try {
@@ -52,8 +48,8 @@ function logGuard(input) {
 }
 
 function makeObservable(input, cancel) {
-  var observable = rxjs.from(input);
-  return rxjs.Observable.create(function (observer) {
+  var observable = from(input);
+  return Observable.create(function (observer) {
     var subscription = observable.subscribe(observer);
     return function unsubscribe() {
       if (typeof cancel === 'function') cancel();
@@ -112,7 +108,7 @@ function _objectSpread(target) {
 
 function concatMapSource(source) {
   return function (input) {
-    return input.pipe(operators.concatMap(function (value) {
+    return input.pipe(concatMap(function (value) {
       return source(value);
     }));
   };
@@ -120,7 +116,7 @@ function concatMapSource(source) {
 
 function mergeMapSource(source) {
   return function (input) {
-    return input.pipe(operators.mergeMap(function (value) {
+    return input.pipe(mergeMap(function (value) {
       return source(value);
     }));
   };
@@ -128,7 +124,7 @@ function mergeMapSource(source) {
 
 function switchMapSource(source) {
   return function (input) {
-    return input.pipe(operators.switchMap(function (value) {
+    return input.pipe(switchMap(function (value) {
       return source(value);
     }));
   };
@@ -350,12 +346,5 @@ VueGentX.install = function (Vue) {
   });
 };
 
-exports.catchError = catchError;
-exports.logGuard = logGuard;
-exports.makeObservable = makeObservable;
-exports.groupFlows = groupFlows;
-exports.flowSource = flowSource;
-exports.flowSources = flowSources;
-exports.gentx = gentx;
-exports.VueGentX = VueGentX;
-//# sourceMappingURL=gentx.common.js.map
+export { catchError, logGuard, makeObservable, groupFlows, flowSource, flowSources, gentx, VueGentX };
+//# sourceMappingURL=gentx.esm.js.map

@@ -16,7 +16,6 @@ npm i rxjs gentx -S
 
 ```js
 import {
-  catchError,
   logGuard,
   makeObservable,
   groupFlows,
@@ -29,9 +28,9 @@ import {
 
 > 这里的概念指`gentx`新加入的概念，其他rxjs的概念请看[RxJS文档](http://reactivex.io/rxjs/manual/overview.html), 或[RxJS文档2](https://robin-front.gitbooks.io/rxjs-doc-chinese/content/why_rxjs.html), 或[RxJS中文文档](https://cn.rx.js.org/manual/index.html)。
 
-### 0：GentX的数据理念
+### 0：GentX的数据管理方式
 
-GentX想应用中数据管理的所有部分分为三个部分：
+GentX 将应用中数据管理的所有部分分为三个部分：
 
 - 数据存储：自定义数据Store，LocalStore，SessionStore，Cookie等…
 - 数据流动变换：将一定事件循环内的所有数据变换抽象为数据的流动，比如点击添加用户按钮的过程，会产生这样一个数据流： `点击按钮` => `参数封装器` => `接口请求器` => `结果处理器` => `数据Store` => `UI`。
@@ -39,11 +38,12 @@ GentX想应用中数据管理的所有部分分为三个部分：
 
 ### 1：动态数据源：Source
 
-> `动态数据源（Source）`是指：能根据一定条件（入参）触发多次，并且每次都能独立地、有规律地发射一个或者多个数据，并且可以随时终止数据发射的所在。
+> `动态数据源（Source）`是指：根据`参数`生成一个[Observable](http://reactivex.io/rxjs/manual/overview.html#observable)。
 
 - 动态数据源（Source）是一个函数
 - 动态数据源（Source）接受一个参数
 - 动态数据源（Source）执行后返回一个 [observable](http://reactivex.io/rxjs/manual/overview.html#observable) 对象
+- 可以用在rxjs的管道操作(`pipe`)之中。
 
 ```js
 // can cancel source
@@ -64,8 +64,8 @@ export function canCancelSource(val) {
 
 // create a observable from a source and a value
 let observable = canCancelSource(1);
-let subscription = observable.subscribe({ 
-  // ... 
+let subscription = observable.subscribe({
+  // ...
 });
 // unsubscribe
 subscription.unsubscribe();
@@ -73,11 +73,11 @@ subscription.unsubscribe();
 
 ### 2：数据流：Flow
 
-> 前面说了，我们在进行app 操作的时候会产生一条条数据流，`Flow`就是这一条条数据流中其中的一段，对流经的数据进行变换。
+> `数据流 Flow 是指`： 传入一个`Observable`，进行各种自定义的管道处理，然后输出一个新的`Observable`。
 
 - Flow是一个函数，用来对`Observable数据流`进行转换。
 - 传入一个(http://reactivex.io/rxjs/manual/overview.html#observable) 对象，传出一个(http://reactivex.io/rxjs/manual/overview.html#observable) 对象。
-- 数据流转换中可以用`Source`来连接，比如和`rxjs`的`concatMap`,`mergeMap`,`switchMap`等操作符一起用。
+- 数据流转换中可以用`Source`来进行管道处理，比如和`rxjs`的`concatMap`,`mergeMap`,`switchMap`等操作符一起用。
 
 ```js
 import { map } from 'rxjs/operators';
@@ -141,7 +141,7 @@ export function logGuard(input, opts={}) {
   return input.pipe(
     map(value => {
       let logData;
-      
+
       try {
         logData = JSON.parse(JSON.stringify(value));
       } catch(e) {
@@ -158,11 +158,11 @@ export function logGuard(input, opts={}) {
 
 ## API
 
-### `makeObservable(input, cancel)`: 
+### `makeObservable(input, cancel)`
 
 根据一个[ObservableInput: input](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObservableInputDoc.html)，创建一个新的`Observable`对象。这个新的`Observable`对象如被取消订阅，会调用函数`cancel`。
 
-### `groupFlows(flowMap={}, opts={})`: 
+### `groupFlows(flowMap={}, opts={})`:
 
 创建一个`Flow` 分组。
 
@@ -192,13 +192,13 @@ export const guardFlows = groupFlows({
 });
 ```
 
-### `flowSource(source, operatorType='concatMap')`: 
+### `flowSource(source, operatorType='concatMap')`
 
 根据`Source`创建一个`Flow`。
 
 > operatorType可以取三个值：concatMap, mergeMap, switchMap。
 
-### `flowSources(sourceMap, operatorType='concatMap')`: 
+### `flowSources(sourceMap, operatorType='concatMap')`
 
 根据一组`Source`返回一个`Flow`集合，内部调用`flowSource`。
 
@@ -219,7 +219,7 @@ export const srcFlows = groupFlows(flowSources(TestSoureces), {
 
 ## 推荐目录结构
 
-```
+```html
 ----data           ## 所有数据相关存在data目录
   |---- apis       ## api请求
   |---- sources    ## 动态数据源
@@ -243,6 +243,7 @@ export const srcFlows = groupFlows(flowSources(TestSoureces), {
 import { gentx } from 'gentx';
 import React from 'react';
 import { of } from 'rxjs';
+import { testFlows } from '../flows/test';
 
 @gentx({
   $bindSub: '$bindSub', // 可以不传，默认`$bindSub`
@@ -256,6 +257,10 @@ class App extends React.Component {
   componentDidMount() {
     let promise = api.get('xxx');
     let observable = from([1]);
+
+    // flowA, floaB is some flow function in flow/test
+    observable = testFlows.floaA(observable);
+    observable = testFlows.floaB(observable);
 
     // 挂载订阅
     let sub1 = observable.subscribe({
@@ -302,8 +307,8 @@ class App extends React.Component {
 
 为vue提供一个插件`VueGentX`, 安装插件后，组件实例会多两个属性`$bindSub`, `$unsubscribe`。
 
-- `$bindSub(sub, name, removePrevious=true)`: 用来绑定组件内进行的所有订阅(rxjs)，便于手动取消订阅和组件unmount时自动取消订阅。
-- `$unsubscribe(name)`: 取消绑定在`$subs`上得订阅，`name`不传时取消所有订阅，`componentWillUnmount`时会默认调用此函数来移除所有订阅。
+- `$bindSub(sub, name, removePrevious=true)`: 用来绑定组件内进行的所有订阅(rxjs)，便于手动取消订阅和组件`beforeDestroy`时自动取消订阅。
+- `$unsubscribe(name)`: 取消绑定在`$subs`上得订阅，`name`不传时取消所有订阅，`beforeDestroy`时会默认调用此函数来移除所有订阅。
 
 ```js
 import Vue from 'vue';
@@ -318,6 +323,10 @@ new Vue({
   mounted() {
     let promise = api.get('xxx');
     let observable = from([1]);
+
+    // flowA, floaB is some flow function in flow/test
+    observable = testFlows.floaA(observable);
+    observable = testFlows.floaB(observable);
 
     // 挂载订阅
     let sub1 = observable.subscribe({

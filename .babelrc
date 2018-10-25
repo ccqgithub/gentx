@@ -1,13 +1,7 @@
 {
   "presets": [
-    ["env", {
-      "targets": {
-        "browsers": ["> 1%", "ie >= 8"]
-      },
-      "useBuiltIns": true,
+    ["@babel/preset-env", {
       "modules": "commonjs"
-    }],
-    "stage-2",
-    "stage-3"
+    }]
   ]
 }

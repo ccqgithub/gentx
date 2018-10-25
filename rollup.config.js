@@ -15,19 +15,10 @@ let plugins = [
   babel({
     babelrc: false,
     exclude: ['node_modules/**/*'],
-    plugins: [
-      'external-helpers'
-    ],
     "presets": [
-      ["env", {
-        "targets": {
-          "browsers": ["> 1%", "ie >= 8"]
-        },
-        "useBuiltIns": true,
+      ["@babel/preset-env", {
         "modules": false
-      }],
-      "stage-2",
-      "stage-3"
+      }]
     ]
   })
 ];
@@ -36,11 +27,24 @@ let config = {
   input: 'index.js',
   plugins: plugins,
   external: external,
-  output: {
-    file: 'dist/gentx.common.js',
-    format: 'cjs',
-    sourcemap: true
-  }
+  output: [
+    {
+      file: 'dist/gentx.common.js',
+      format: 'cjs',
+      sourcemap: true
+    },
+    {
+      file: 'dist/gentx.esm.js',
+      format: 'esm',
+      sourcemap: true
+    },
+    {
+      file: 'dist/gentx.umd.js',
+      format: 'umd',
+      name: 'GentX',
+      sourcemap: true
+    }
+  ]
 }
 
 export default config;
